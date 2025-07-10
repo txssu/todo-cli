@@ -6,17 +6,14 @@ import { add } from "./commands/add";
 import { list } from "./commands/list";
 import { init } from "./commands/init";
 
-const maybeHandleError = E.fold(
-  (errorMsg) => console.error("ERROR", errorMsg),
-  (value) => console.log(value),
-);
+const handleResult = E.fold(console.error, console.log);
 
 const buildCommandHandler = (words: string[]): TE.TaskEither<string, string> =>
   match(words)
-    .with(["add", ...P.array()], ([_, ...rest]) => add(rest))
-    .with(["list"], ([_]) => list)
-    .with(["init"], ([_]) => init)
-    .with(P._, (_) => TE.of("Command not found"))
+    .with(["add", ...P.array()], ([, ...rest]) => add(rest))
+    .with(["list"], () => list)
+    .with(["init"], () => init)
+    .with(P._, () => TE.left("Command not found"))
     .exhaustive();
 
 async function main() {
@@ -24,8 +21,8 @@ async function main() {
     const words = readlineSync.question(">>>").split(" ");
     const handleCommand = buildCommandHandler(words);
     const result = await handleCommand();
-    maybeHandleError(result);
+    handleResult(result);
   }
 }
 
-main();
+void main();

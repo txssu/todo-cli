@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "@types/readline-sync": "^1.4.8",
+    "fp-ts": "^2.16.10",
+    "readline-sync": "^1.4.10",
+    "ts-pattern": "^5.7.1",
+    "typescript": "^5.8.3",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.18"
+  },
+  "scripts": {
+    "dev": "bun src/index.ts"
+  }
+}

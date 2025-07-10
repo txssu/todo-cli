@@ -1,7 +1,8 @@
 import type { Task } from "../models/task";
-import * as TE from "fp-ts/TaskEither";
 import * as uuid from "uuid";
-import { readDB, writeDB } from "../db";
+import { putTaskDB } from "../db";
+import { pipe } from "fp-ts/lib/function";
+import { returnSuccess } from "./utils";
 
 const buildTask = (title: string): Task => ({
   id: uuid.v4(),
@@ -10,8 +11,9 @@ const buildTask = (title: string): Task => ({
 });
 
 export const add = (commandInput: string[]) =>
-  TE.chain((db: Task[]) =>
-    TE.map(() => "Task added")(
-      writeDB([...db, buildTask(commandInput.join(" "))]),
-    ),
-  )(readDB);
+  pipe(
+    commandInput.join(" "),
+    buildTask,
+    putTaskDB,
+    returnSuccess("Task successfully added"),
+  );

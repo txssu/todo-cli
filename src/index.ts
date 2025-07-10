@@ -1,27 +1,46 @@
 import readlineSync from "readline-sync";
+
+import * as O from "fp-ts/Option";
 import * as TE from "fp-ts/TaskEither";
-import * as E from "fp-ts/Either";
-import { match, P } from "ts-pattern";
+
 import { add } from "./commands/add";
 import { list } from "./commands/list";
 import { init } from "./commands/init";
+import { pipe } from "fp-ts/lib/function";
 
-const handleResult = E.fold(console.error, console.log);
+type Command = (userInput: string[]) => TE.TaskEither<string, string>;
 
-const buildCommandHandler = (words: string[]): TE.TaskEither<string, string> =>
-  match(words)
-    .with(["add", ...P.array()], ([, ...rest]) => add(rest))
-    .with(["list"], () => list)
-    .with(["init"], () => init)
-    .with(P._, () => TE.left("Command not found"))
-    .exhaustive();
+const commandsMap: Record<string, Command> = {
+  add: add,
+  list: list,
+  init: init,
+};
+
+const readline = () => TE.of(readlineSync.question(">>>").split(" "));
+
+const handleCommand = TE.flatMap(([strCommand, ...userInput]: string[]) =>
+  pipe(strCommand, toCommand, execCommand(userInput)),
+);
+
+const toCommand = (value?: string) =>
+  pipe(
+    value,
+    O.fromNullable,
+    O.chainNullableK((k) => commandsMap[k]),
+  );
+
+const execCommand = (userInput: string[]) =>
+  O.match(
+    () => TE.left("Command not found"),
+    (command: Command) => command(userInput),
+  );
+
+const handleResult = TE.match(console.error, console.log);
 
 async function main() {
   for (;;) {
-    const words = readlineSync.question(">>>").split(" ");
-    const handleCommand = buildCommandHandler(words);
-    const result = await handleCommand();
-    handleResult(result);
+    const task = pipe(readline(), handleCommand, handleResult);
+    await task();
   }
 }
 

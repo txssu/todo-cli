@@ -8,4 +8,4 @@ const formatTask = (task: Task) =>
 
 const formatDB = (db: Task[]) => db.map(formatTask).join("\n");
 
-export const list = pipe(readDB, TE.map(formatDB));
+export const list = () => pipe(readDB, TE.map(formatDB));

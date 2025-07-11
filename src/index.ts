@@ -1,12 +1,13 @@
-import readlineSync from "readline-sync";
-
 import * as O from "fp-ts/Option";
+import * as IO from "fp-ts/IO";
+import * as T from "fp-ts/Task";
 import * as TE from "fp-ts/TaskEither";
 
 import { add } from "./commands/add";
 import { list } from "./commands/list";
 import { init } from "./commands/init";
-import { pipe } from "fp-ts/lib/function";
+import { flow, pipe } from "fp-ts/function";
+import { readLine, writeLine } from "./cli";
 
 type Command = (userInput: string[]) => TE.TaskEither<string, string>;
 
@@ -16,7 +17,9 @@ const commandsMap: Record<string, Command> = {
   init: init,
 };
 
-const readline = () => TE.of(readlineSync.question(">>>").split(" "));
+const words = (s: string) => s.split(" ");
+
+const requestUserInput = () => pipe(">>> ", readLine, IO.map(words), TE.fromIO);
 
 const handleCommand = TE.flatMap(([strCommand, ...userInput]: string[]) =>
   pipe(strCommand, toCommand, execCommand(userInput)),
@@ -35,11 +38,14 @@ const execCommand = (userInput: string[]) =>
     (command: Command) => command(userInput),
   );
 
-const handleResult = TE.match(console.error, console.log);
+const writeOutput = flow(writeLine, T.fromIO);
+const writeError = flow((s: string) => writeLine(s, "error"), T.fromIO);
+
+const handleResult = TE.matchE(writeError, writeOutput);
 
 async function main() {
   for (;;) {
-    const task = pipe(readline(), handleCommand, handleResult);
+    const task = pipe(requestUserInput(), handleCommand, handleResult);
     await task();
   }
 }

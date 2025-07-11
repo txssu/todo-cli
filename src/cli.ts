@@ -1,9 +1,8 @@
 import * as IO from "fp-ts/IO";
-import { constUndefined } from "fp-ts/function";
+import { constUndefined, flow } from "fp-ts/function";
 import readlineSync from "readline-sync";
 
-export const readLine = (prompt: string) =>
-  IO.of(readlineSync.question(prompt));
+export const readLine = flow(readlineSync.question, IO.of);
 
 type LogType = "log" | "error";
 

@@ -1,7 +1,7 @@
 import type { Task } from "../models/task";
 import * as uuid from "uuid";
 import { putTaskDB } from "../db";
-import { pipe } from "fp-ts/lib/function";
+import { flow } from "fp-ts/lib/function";
 import { returnSuccess } from "./utils";
 
 const buildTask = (title: string): Task => ({
@@ -10,10 +10,11 @@ const buildTask = (title: string): Task => ({
   completed: false,
 });
 
-export const add = (commandInput: string[]) =>
-  pipe(
-    commandInput.join(" "),
-    buildTask,
-    putTaskDB,
-    returnSuccess("Task successfully added"),
-  );
+const unwords = (s: string[]) => s.join(" ");
+
+export const add = flow(
+  unwords,
+  buildTask,
+  putTaskDB,
+  returnSuccess("Task successfully added"),
+);

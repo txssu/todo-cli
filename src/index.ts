@@ -30,6 +30,7 @@ const toCommand: (value?: string) => O.Option<Command> = flow(
   O.fromNullable,
   O.chainNullableK((k) => commandsMap[k]),
 );
+
 const handleCommand = TE.flatMap(([strCommand, ...userInput]: string[]) =>
   pipe(
     strCommand,
